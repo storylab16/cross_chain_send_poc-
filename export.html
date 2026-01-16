@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Chain Transaction Prototype - Exact Export</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@11/dist/framer-motion.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', 'Noto Sans', sans-serif;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #root {
+            width: 393px;
+            height: 852px;
+        }
+
+        /* Custom scrollbar for dark mode */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // SVG Paths from all imports
+        const svgPaths = {
+            // From svg-dqk4842qto
+            p18b35300: "M8.5713 2.46628C11.0584 2.46639 13.4504 3.38847 15.2529 5.04195C15.3887 5.1696 15.6056 5.16799 15.7393 5.03834L17.0368 3.77487C17.1045 3.70911 17.1422 3.62004 17.1417 3.52735C17.1411 3.43467 17.1023 3.34603 17.0338 3.28104C12.3028 -1.09368 4.83907 -1.09368 0.108056 3.28104C0.039524 3.34598 0.000639766 3.4346 7.82398e-06 3.52728C-0.000624118 3.61996 0.0370483 3.70906 0.104689 3.77487L1.40255 5.03834C1.53615 5.16819 1.75327 5.1698 1.88893 5.04195C3.69167 3.38836 6.08395 2.46628 8.5713 2.46628ZM8.56795 6.68656C9.92527 6.68647 11.2341 7.19821 12.2403 8.12234C12.3763 8.2535 12.5907 8.25065 12.7234 8.11593L14.0106 6.79663C14.0784 6.72742 14.1161 6.63355 14.1151 6.53599C14.1141 6.43844 14.0746 6.34536 14.0054 6.27757C10.9416 3.38672 6.19688 3.38672 3.13305 6.27757C3.06384 6.34536 3.02435 6.43849 3.02345 6.53607C3.02254 6.63365 3.06028 6.72752 3.12822 6.79663L4.41513 8.11593C4.54778 8.25065 4.76215 8.2535 4.89823 8.12234C5.90368 7.19882 7.21152 6.68713 8.56795 6.68656ZM11.0924 9.48011C11.0943 9.58546 11.0572 9.68703 10.9899 9.76084L8.81327 12.2156C8.74946 12.2877 8.66247 12.3283 8.5717 12.3283C8.48093 12.3283 8.39394 12.2877 8.33013 12.2156L6.1531 9.76084C6.08585 9.68697 6.04886 9.58537 6.05085 9.48002C6.05284 9.37467 6.09365 9.27491 6.16364 9.20429C7.55374 7.8904 9.58966 7.8904 10.9798 9.20429C11.0497 9.27497 11.0904 9.37476 11.0924 9.48011Z",
+            p1e09e400: "M19.2 1.14623C19.2 0.513183 18.7224 0 18.1333 0H17.0667C16.4776 0 16 0.513183 16 1.14623V11.0802C16 11.7132 16.4776 12.2264 17.0667 12.2264H18.1333C18.7224 12.2264 19.2 11.7132 19.2 11.0802V1.14623ZM11.7659 2.44528H12.8326C13.4217 2.44528 13.8992 2.97078 13.8992 3.61902V11.0527C13.8992 11.7009 13.4217 12.2264 12.8326 12.2264H11.7659C11.1768 12.2264 10.6992 11.7009 10.6992 11.0527V3.61902C10.6992 2.97078 11.1768 2.44528 11.7659 2.44528ZM7.43411 5.09433H6.36745C5.77834 5.09433 5.30078 5.62652 5.30078 6.28301V11.0377C5.30078 11.6942 5.77834 12.2264 6.36745 12.2264H7.43411C8.02322 12.2264 8.50078 11.6942 8.50078 11.0377V6.28301C8.50078 5.62652 8.02322 5.09433 7.43411 5.09433ZM2.13333 7.53962H1.06667C0.477563 7.53962 0 8.06421 0 8.71132V11.0547C0 11.7018 0.477563 12.2264 1.06667 12.2264H2.13333C2.72244 12.2264 3.2 11.7018 3.2 11.0547V8.71132C3.2 8.06421 2.72244 7.53962 2.13333 7.53962Z",
+            p3bbd9700: "M26 4.78113V8.8566C26.8047 8.51143 27.328 7.70847 27.328 6.81886C27.328 5.92926 26.8047 5.1263 26 4.78113",
+            p25f51000: "M38.2565 70.1369C55.8635 70.1369 70.1369 55.8635 70.1369 38.2565C70.1369 20.6494 55.8635 6.37608 38.2565 6.37608C20.6494 6.37608 6.37608 20.6494 6.37608 38.2565C6.37608 55.8635 20.6494 70.1369 38.2565 70.1369Z",
+            p530df40: "M49.4147 30.3008L31.8805 47.8525L25.1827 41.1547",
+            pace200: "M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z",
+            
+            // From svg-gbevjh1ze5
+            p2300dc00: "M32.3984 1.34961C49.5459 1.34968 63.4463 15.2509 63.4463 32.3984C63.4462 49.5459 49.5459 63.4462 32.3984 63.4463C15.2509 63.4463 1.34968 49.5459 1.34961 32.3984C1.34961 15.2509 15.2509 1.34961 32.3984 1.34961Z",
+            p2466d200: "M40.8831 26.0757C40.6693 25.67 40.0484 24.6037 39.4221 23.8003C38.601 22.7469 36.5735 22.2845 34.8697 22.0828C31.5552 21.6905 30.5934 22.2248 29.4823 22.7731C28.4535 23.2809 28.1046 24.5972 27.6156 26.2808C27.2737 27.4578 27.4652 28.3555 27.5253 28.6583C27.5826 28.9468 27.827 29.174 28.1038 29.3736C28.3968 29.5848 28.9698 29.6649 30.301 29.8681C32.8372 30.2553 34.7788 30.4667 35.4419 30.6312C36.1791 30.8141 37.1693 31.2712 38.5122 32.0322C41.2394 33.5777 41.3801 34.3809 41.5882 34.9235C41.9838 35.9549 41.4957 37.593 41.0017 38.7351C40.5306 39.8242 38.8675 40.7529 36.7995 41.6324C35.7177 42.0926 34.1065 41.969 32.4848 41.9451C30.4321 41.9148 28.5577 40.9439 27.1144 39.9438C26.4088 39.0521 25.9231 37.9156 25.7948 37.2962C25.7963 37.2013 25.9331 37.5518 26.074 37.913",
+            p11839d00: "M32.5521 44.0055C32.6128 44.2189 32.6736 44.4322 32.7225 44.9419C32.7715 45.4516 32.8068 46.251 32.8839 46.772",
+            p178e0d80: "M33.3166 20.4237C33.2974 20.365 33.2782 20.3063 33.2583 20.1972C33.2385 20.088 33.2186 19.9301 33.1965 19.5065C33.1745 19.0829 33.1509 18.3984 33.0954 17.645",
+            p313ea600: "M24.9741 11.3162C24.4477 11.4981 23.1303 11.8944 21.4126 12.4145C20.4583 12.7034 18.9964 13.7197 17.1083 15.0423C5.71425 23.0239 7.30992 42.1393 17.7499 50.1059C19.5755 51.499 20.9246 52.23 21.7551 52.557C23.8674 53.3887 24.4478 53.5383 24.7576 53.4672",
+            p15704c00: "M39.8273 11.3154C40.3537 11.4974 41.671 11.8936 43.3888 12.4137C44.343 12.7026 45.805 13.7189 47.693 15.0415C59.0871 23.0232 57.4914 42.1385 47.0515 50.1051C45.2258 51.4983 43.8768 52.2293 43.0463 52.5562C40.934 53.3879 40.3535 53.5375 40.0437 53.4664",
+            p35d95880: "M10.0002 20C15.523 20 20.0002 15.5228 20.0002 10C20.0002 4.47715 15.523 0 10.0002 0C4.47734 0 0.00018696 4.47715 0.00018696 10C0.00018696 15.5228 4.47734 20 10.0002 20Z",
+            
+            // From svg-lru3gl41e7
+            p17d47b00: "M16 0.666992C24.4684 0.666992 31.333 7.53163 31.333 16C31.333 24.4684 24.4684 31.333 16 31.333C7.53163 31.333 0.666992 24.4684 0.666992 16C0.666992 7.53163 7.53163 0.666992 16 0.666992Z",
+            p18e7e00: "M20.1903 12.8775C20.0847 12.6771 19.7781 12.1505 19.4688 11.7538C19.0633 11.2336 18.062 11.0052 17.2206 10.9056C15.5837 10.7119 15.1087 10.9757 14.56 11.2465C14.0519 11.4972 13.8796 12.1473 13.6381 12.9788C13.4693 13.56 13.5638 14.0034 13.5935 14.1529C13.6218 14.2954 13.7425 14.4076 13.8792 14.5061C14.0239 14.6104 14.3069 14.65 14.9643 14.7504C16.2168 14.9416 17.1757 15.046 17.5032 15.1272C17.8672 15.2176 18.3562 15.4433 19.0194 15.8191C20.3662 16.5824 20.4358 16.979 20.5385 17.247C20.7339 17.7564 20.4928 18.5653 20.2489 19.1293C20.0162 19.6672 19.1949 20.1258 18.1736 20.5602C17.6393 20.7875 16.8437 20.7264 16.0428 20.7146C15.029 20.6997 14.1034 20.2202 13.3906 19.7263C13.0421 19.2859 12.8022 18.7246 12.7389 18.4188C12.7397 18.3719 12.8072 18.545 12.8768 18.7233",
+            p2170d180: "M16.076 21.7323C16.1061 21.8377 16.1361 21.943 16.1602 22.1947C16.1844 22.4464 16.2018 22.8412 16.2399 23.0985",
+            p727e900: "M16.4536 10.0862C16.4441 10.0572 16.4346 10.0283 16.4248 9.97435C16.415 9.92044 16.4052 9.84248 16.3943 9.63328C16.3834 9.42409 16.3718 9.08603 16.3444 8.71394",
+            p3c2ddc00: "M12.3335 5.58909C12.0735 5.67896 11.4229 5.87465 10.5746 6.13149C10.1033 6.27418 9.38133 6.77608 8.44892 7.42924C2.82192 11.371 3.60995 20.8112 8.76574 24.7455C9.66736 25.4335 10.3336 25.7945 10.7437 25.956C11.7869 26.3667 12.0736 26.4406 12.2265 26.4055",
+            p30f0fa00: "M19.669 5.58819C19.929 5.67806 20.5795 5.87375 21.4279 6.13059C21.8991 6.27327 22.6211 6.77518 23.5535 7.42834C29.1805 11.3701 28.3925 20.8103 23.2367 24.7446C22.3351 25.4326 21.6689 25.7936 21.2587 25.9551C20.2155 26.3658 19.9289 26.4397 19.7759 26.4046",
+            p1b571080: "M9.23446 4.29428H11.8624L12.1095 4.30893C13.3213 4.4523 14.1672 5.63609 13.8624 6.8558L13.8126 7.02475C13.5483 7.79645 12.8509 8.3413 12.0382 8.41049L11.8624 8.41733H9.22177L8.34188 11.8382L7.837 11.7093L7.33309 11.5794L9.20809 4.28744L9.23446 4.29428ZM5.07235 4.11752C6.74365 4.03824 8.02348 5.58555 7.63192 7.21225L7.04794 9.6351C6.77482 10.7687 5.7598 11.5668 4.59384 11.5648L4.44149 11.5599C2.88328 11.4655 1.76978 9.97354 2.15341 8.43491L2.75594 6.01791C3.00724 5.01002 3.84999 4.26733 4.8663 4.1351L5.07235 4.11752ZM5.12216 5.15854C4.47465 5.18933 3.92351 5.64089 3.76669 6.26987L3.16415 8.68686C2.93185 9.61854 3.63559 10.5219 4.59579 10.5238C5.27968 10.5249 5.87499 10.0558 6.03524 9.39096L6.61923 6.96909C6.84845 6.01749 6.09978 5.1124 5.12216 5.15854ZM9.51571 7.37534H11.8624C12.3303 7.37523 12.7381 7.05677 12.8516 6.60287C13.0123 5.95935 12.5257 5.33641 11.8624 5.33627H10.0265L9.51571 7.37534Z",
+            p32607400: "M4.67647 1.5H2.5C1.94772 1.5 1.5 1.94772 1.5 2.5V9.5C1.5 10.0523 1.94772 10.5 2.5 10.5H9.5C10.0523 10.5 10.5 10.0523 10.5 9.5V7.32353",
+            
+            // From svg-rtos0dxgoh
+            p320cb280: "M16.2806 9.21937C16.3504 9.28903 16.4057 9.37175 16.4434 9.46279C16.4812 9.55384 16.5006 9.65144 16.5006 9.75C16.5006 9.84856 16.4812 9.94616 16.4434 10.0372C16.4057 10.1283 16.3504 10.211 16.2806 10.2806L11.0306 15.5306C10.961 15.6004 10.8783 15.6557 10.7872 15.6934C10.6962 15.7312 10.5986 15.7506 10.5 15.7506C10.4014 15.7506 10.3038 15.7312 10.2128 15.6934C10.1217 15.6557 10.039 15.6004 9.96937 15.5306L7.71937 13.2806C7.57864 13.1399 7.49958 12.949 7.49958 12.75C7.49958 12.551 7.57864 12.3601 7.71937 12.2194C7.86011 12.0786 8.05098 11.9996 8.25 11.9996C8.44902 11.9996 8.63989 12.0786 8.78063 12.2194L10.5 13.9397L15.2194 9.21937C15.289 9.14964 15.3717 9.09432 15.4628 9.05658C15.5538 9.01884 15.6514 8.99941 15.75 8.99941C15.8486 8.99941 15.9462 9.01884 16.0372 9.05658C16.1283 9.09432 16.211 9.14964 16.2806 9.21937ZM21.75 12C21.75 13.9284 21.1782 15.8134 20.1068 17.4168C19.0355 19.0202 17.5127 20.2699 15.7312 21.0078C13.9496 21.7458 11.9892 21.9389 10.0979 21.5627C8.20655 21.1865 6.46927 20.2579 5.10571 18.8943C3.74215 17.5307 2.81355 15.7934 2.43734 13.9021C2.06114 12.0108 2.25422 10.0504 2.99217 8.26884C3.73013 6.48726 4.97981 4.96452 6.58319 3.89317C8.18657 2.82183 10.0716 2.25 12 2.25C14.585 2.25273 17.0634 3.28084 18.8913 5.10872C20.7192 6.93661 21.7473 9.41498 21.75 12ZM20.25 12C20.25 10.3683 19.7661 8.77325 18.8596 7.41655C17.9531 6.05984 16.6646 5.00242 15.1571 4.37799C13.6496 3.75357 11.9908 3.59019 10.3905 3.90852C8.79016 4.22685 7.32015 5.01259 6.16637 6.16637C5.01259 7.32015 4.22685 8.79016 3.90852 10.3905C3.59019 11.9908 3.75357 13.6496 4.37799 15.1571C5.00242 16.6646 6.05984 17.9531 7.41655 18.8596C8.77325 19.7661 10.3683 20.25 12 20.25C14.1873 20.2475 16.2843 19.3775 17.8309 17.8309C19.3775 16.2843 20.2475 14.1873 20.25 12Z",
+            p7c2b200: "M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1",
+        };
+
+        // =================================================================
+        // COMPONENTS - EXACT FROM REACT CODE
+        // =================================================================
+
+        // StatusBar Component (Used across all screens except Landing)
+        function StatusBarComponent() {
+            return (
+                <div className="absolute content-stretch flex gap-[154px] items-center justify-center left-0 pb-[19px] pt-[21px] px-[16px] right-0 top-0">
+                    <div className="basis-0 content-stretch flex grow h-[22px] items-center justify-center min-h-px min-w-px pb-0 pt-[2px] px-0 relative shrink-0">
+                        <p className="font-semibold leading-[22px] relative shrink-0 text-[17px] text-black dark:text-white text-center whitespace-nowrap">
+                            9:41
+                        </p>
+                    </div>
+                    <div className="basis-0 content-stretch flex gap-[7px] grow h-[22px] items-center justify-center min-h-px min-w-px pb-0 pt-px px-0 relative shrink-0">
+                        <div className="h-[12.226px] relative shrink-0 w-[19.2px]">
+                            <div className="absolute inset-0">
+                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 19.2 12.2264">
+                                    <path clipRule="evenodd" d={svgPaths.p1e09e400} fill="black" className="dark:fill-white" fillRule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="h-[12.328px] relative shrink-0 w-[17.142px]">
+                            <div className="absolute inset-0">
+                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 17.1417 12.3283">
+                                    <path clipRule="evenodd" d={svgPaths.p18b35300} fill="black" className="dark:fill-white" fillRule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="h-[13px] relative shrink-0 w-[27.328px]">
+                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 27.328 13">
+                                <g>
+                                    <rect height="12" opacity="0.35" rx="3.8" stroke="black" className="dark:stroke-white" width="24" x="0.5" y="0.5" />
+                                    <path d={svgPaths.p3bbd9700} fill="black" className="dark:fill-white" opacity="0.4" />
+                                    <rect fill="black" className="dark:fill-white" height="9" rx="2.5" width="21" x="2" y="2" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Landing Screen - EXACT FROM REACT
+        function LandingScreen({ onStartSend }) {
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <div className="absolute bg-gradient-to-br from-[#f8f9fb] to-[#e8ecf4] dark:from-gray-800 dark:to-gray-900 content-stretch flex h-[784.405px] items-start justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="basis-0 content-stretch flex flex-col gap-[24px] grow h-full items-center justify-center min-h-px min-w-px relative shrink-0">
+                            
+                            {/* Header Section */}
+                            <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                className="content-stretch flex flex-col gap-[12px] items-center relative shrink-0 w-full"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                        <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="#0066FF" />
+                                        <path d="M2 23L16 30L30 23L16 16L2 23Z" fill="#0066FF" opacity="0.6" />
+                                        <path d="M2 16L16 23L30 16" stroke="#0066FF" strokeWidth="2" strokeLinecap="round" />
+                                    </svg>
+                                    <h1 className="font-bold leading-[28px] relative shrink-0 text-[#1a1d1f] dark:text-gray-100 text-[22px] text-center">
+                                        Cross-Chain Send PoC
+                                    </h1>
+                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.6, delay: 0.3 }}
+                                    className="inline-flex items-center justify-center px-3 py-1.5 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-full border border-[#0066FF]/20 dark:border-[#0066FF]/40"
+                                >
+                                    <p className="font-medium text-[11px] text-[#0066FF] dark:text-blue-400">
+                                        Test Version 001-14-01
+                                    </p>
+                                </motion.div>
+                            </motion.div>
+
+                            {/* Network Visualization */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                                className="relative w-full h-[280px] flex items-center justify-center"
+                            >
+                                <svg width="100%" height="100%" viewBox="0 0 320 280" className="absolute inset-0">
+                                    <motion.line 
+                                        x1="80" y1="140" x2="240" y2="80" 
+                                        stroke="#0066FF" strokeWidth="2" opacity="0.5"
+                                        initial={{ pathLength: 0 }}
+                                        animate={{ pathLength: 1 }}
+                                        transition={{ duration: 1, delay: 0.5 }}
+                                    />
+                                    <motion.line 
+                                        x1="80" y1="140" x2="240" y2="140" 
+                                        stroke="#0066FF" strokeWidth="2" opacity="0.5"
+                                        initial={{ pathLength: 0 }}
+                                        animate={{ pathLength: 1 }}
+                                        transition={{ duration: 1, delay: 0.6 }}
+                                    />
+                                    <motion.line 
+                                        x1="80" y1="140" x2="240" y2="200" 
+                                        stroke="#0066FF" strokeWidth="2" opacity="0.5"
+                                        initial={{ pathLength: 0 }}
+                                        animate={{ pathLength: 1 }}
+                                        transition={{ duration: 1, delay: 0.7 }}
+                                    />
+                                    
+                                    <motion.polygon 
+                                        points="235,78 240,80 235,82" 
+                                        fill="#0066FF"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.3, delay: 1.5 }}
+                                    />
+                                    <motion.polygon 
+                                        points="235,138 240,140 235,142" 
+                                        fill="#0066FF"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.3, delay: 1.6 }}
+                                    />
+                                    <motion.polygon 
+                                        points="235,198 240,200 235,202" 
+                                        fill="#0066FF"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.3, delay: 1.7 }}
+                                    />
+                                </svg>
+
+                                {/* Arbitrum - Left (Source) */}
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.4 }}
+                                    className="absolute top-1/2 left-[40px] -translate-y-1/2 flex flex-col items-center gap-1"
+                                >
+                                    <div className="bg-white border-2 border-[#0066FF]/40 p-2 rounded-full w-[72px] h-[72px] flex items-center justify-center shadow-xl">
+                                        <div className="bg-[#2D374B] rounded-full p-2 w-[56px] h-[56px] flex items-center justify-center">
+                                            <img src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=040" alt="Arbitrum" className="w-full h-full" />
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Optimism - Top Right */}
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.5 }}
+                                    className="absolute top-[50px] right-[40px] flex flex-col items-center gap-1"
+                                >
+                                    <div className="bg-white border-2 border-[#0066FF]/30 p-2 rounded-full w-[56px] h-[56px] flex items-center justify-center shadow-lg">
+                                        <div className="bg-[#FF0420] rounded-full p-2 w-[40px] h-[40px] flex items-center justify-center">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                                <circle cx="8" cy="12" r="3" />
+                                                <circle cx="16" cy="12" r="3" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Polygon - Middle Right */}
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
+                                    className="absolute top-1/2 -translate-y-1/2 right-[40px] flex flex-col items-center gap-1"
+                                >
+                                    <div className="bg-white border-2 border-[#0066FF]/30 p-2 rounded-full w-[56px] h-[56px] flex items-center justify-center shadow-lg">
+                                        <div className="bg-[#8247E5] rounded-full p-2 w-[40px] h-[40px] flex items-center justify-center">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                                <path d="M12 4L16 7V13L12 16L8 13V7L12 4Z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* BSC - Bottom Right */}
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.7 }}
+                                    className="absolute bottom-[50px] right-[40px] flex flex-col items-center gap-1"
+                                >
+                                    <div className="bg-white border-2 border-[#0066FF]/30 p-2 rounded-full w-[56px] h-[56px] flex items-center justify-center shadow-lg">
+                                        <div className="bg-[#F3BA2F] rounded-full p-2 w-[40px] h-[40px] flex items-center justify-center">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                                <rect x="10" y="10" width="4" height="4" />
+                                                <rect x="4" y="10" width="4" height="4" />
+                                                <rect x="16" y="10" width="4" height="4" />
+                                                <rect x="10" y="4" width="4" height="4" />
+                                                <rect x="10" y="16" width="4" height="4" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+
+                            {/* Send Button */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.9 }}
+                                className="content-stretch flex flex-col items-start justify-end relative shrink-0 w-full"
+                            >
+                                <div className="content-stretch flex gap-[3px] h-[52.55px] items-center relative shrink-0 w-full">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={onStartSend}
+                                        className="basis-0 bg-[#007FFF] grow h-[52px] min-h-px min-w-px relative rounded-[100px] shrink-0 cursor-pointer shadow-lg shadow-[#007FFF]/30"
+                                    >
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-center p-[10px] relative w-full h-full">
+                                                <p className="font-medium leading-[22px] relative shrink-0 text-[16px] whitespace-nowrap text-white">
+                                                    START
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Send Form Screen - EXACT FROM REACT
+        function SendFormScreen({ onConfirm }) {
+            const [amount, setAmount] = useState('');
+            const [toAddress, setToAddress] = useState('');
+            const [showNetworkSelection, setShowNetworkSelection] = useState(false);
+            const [selectedNetworks, setSelectedNetworks] = useState([]);
+            const [isAmountFocused, setIsAmountFocused] = useState(false);
+
+            const initialBalance = 200;
+            const numericAmount = parseFloat(amount) || 0;
+            const remainingBalance = initialBalance - numericAmount;
+
+            const toggleNetwork = (network) => {
+                setSelectedNetworks(prev => 
+                    prev.includes(network) 
+                        ? prev.filter(n => n !== network)
+                        : [...prev, network]
+                );
+            };
+
+            const handleConfirm = () => {
+                if (amount && toAddress && selectedNetworks.length > 0) {
+                    onConfirm({ amount, toAddress, selectedNetworks });
+                }
+            };
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 content-stretch flex h-[784.405px] items-start justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="basis-0 content-stretch flex flex-col gap-[20px] grow h-full items-start min-h-px min-w-px relative shrink-0">
+                            {/* Controller - Close Button */}
+                            <div className="content-stretch flex items-center justify-end relative shrink-0 w-full">
+                                <div className="relative shrink-0 w-[24px] h-[24px]">
+                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                        <g>
+                                            <rect fill="white" className="dark:fill-gray-900" height="24" width="24" />
+                                            <path d={svgPaths.pace200} fill="#EFEFEF" className="dark:fill-gray-800" />
+                                            <path d="M15 9L9 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                            <path d="M9 9L15 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                        </g>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="basis-0 bg-white dark:bg-gray-900 content-stretch flex flex-col gap-[60px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                <div className="basis-0 content-stretch flex flex-col gap-[32px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                    {/* Header */}
+                                    <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+                                        <div className="content-stretch flex flex-col gap-[20px] items-center relative shrink-0 w-full">
+                                            <div className="content-stretch flex flex-col items-start leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-center w-full">
+                                                <p className="font-bold h-[24.241px] relative shrink-0 text-[20px] w-full">Send </p>
+                                                <p className="font-light h-[24.241px] relative shrink-0 text-[16px] w-full text-gray-600 dark:text-gray-400">Cross-chain Send PoC</p>
+                                            </div>
+                                            <div className="relative shrink-0 w-[64.797px] h-[64.797px]">
+                                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 64.7966 64.7966">
+                                                    <g>
+                                                        <path d={svgPaths.p2300dc00} fill="black" className="dark:fill-gray-800" stroke="white" className="dark:stroke-gray-300" strokeWidth="2.69986" />
+                                                        <g>
+                                                            <path d={svgPaths.p2466d200} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="4.04979" />
+                                                            <path d={svgPaths.p11839d00} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="4.04979" />
+                                                            <path d={svgPaths.p178e0d80} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="4.04979" />
+                                                            <path d={svgPaths.p313ea600} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="4.04979" />
+                                                            <path d={svgPaths.p15704c00} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="4.04979" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Input */}
+                                    <div className="basis-0 content-stretch flex flex-col gap-[12px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                        {/* Amount Input Card */}
+                                        <div className="bg-white dark:bg-gray-800 content-stretch flex flex-col items-end relative rounded-[20px] shrink-0 w-full">
+                                            <div aria-hidden="true" className="absolute border border-black dark:border-gray-600 border-solid inset-[-1px] pointer-events-none rounded-[21px]" />
+                                            
+                                            {/* Amount Input */}
+                                            <div className="bg-white dark:bg-gray-800 relative rounded-t-[20px] shrink-0 w-full">
+                                                <div className="flex flex-row items-center justify-center w-full h-full">
+                                                    <div className="content-stretch flex items-center justify-center px-[10px] py-[44px] relative w-full">
+                                                        <input
+                                                            type="text"
+                                                            value={amount}
+                                                            onChange={(e) => setAmount(e.target.value)}
+                                                            placeholder={isAmountFocused ? "" : "0.00"}
+                                                            className="font-semibold h-full leading-[23.542px] relative shrink-0 text-[64px] text-black dark:text-gray-100 text-center w-[200px] bg-transparent outline-none border-none placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                                                            onFocus={() => setIsAmountFocused(true)}
+                                                            onBlur={() => setIsAmountFocused(false)}
+                                                            maxLength={2}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Divider */}
+                                            <div className="h-0 relative shrink-0 w-full">
+                                                <div className="absolute inset-[-0.5px_0]">
+                                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 329 1">
+                                                        <g>
+                                                            <path d="M0 0.5H329" stroke="black" className="dark:stroke-gray-600" />
+                                                        </g>
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            {/* Network Balance List */}
+                                            <div className="relative rounded-b-[20px] shrink-0 w-full">
+                                                <div className="flex flex-col items-end justify-center w-full h-full">
+                                                    <div className="content-stretch flex flex-col items-end justify-center px-[20px] py-[12px] relative w-full h-full">
+                                                        <div className="content-stretch flex h-[24px] items-center justify-between relative shrink-0 w-full">
+                                                            <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
+                                                                <div className="overflow-clip relative shrink-0 w-[20px] h-[20px]">
+                                                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 20.0002 20">
+                                                                        <g>
+                                                                            <path d={svgPaths.p35d95880} fill="black" className="dark:fill-gray-300" />
+                                                                        </g>
+                                                                    </svg>
+                                                                </div>
+                                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-300 text-[14px] whitespace-nowrap">Arbitrum </p>
+                                                            </div>
+                                                            <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-300 text-[14px] whitespace-nowrap">Balance: {remainingBalance.toFixed(2)} USDC </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* To Address Input */}
+                                        <div className="bg-white dark:bg-gray-800 h-[94px] relative rounded-[20px] shrink-0 w-full">
+                                            <div aria-hidden="true" className="absolute border border-black dark:border-gray-600 border-solid inset-0 pointer-events-none rounded-[20px]" />
+                                            <div className="content-stretch flex flex-col items-start p-[10px] relative w-full h-full">
+                                                <div className="relative shrink-0 w-full">
+                                                    <div className="flex flex-col justify-center w-full h-full">
+                                                        <div className="content-stretch flex flex-col gap-[10px] items-start justify-center leading-[23.542px] p-[10px] relative text-[14px] w-full">
+                                                            <p className="font-black relative shrink-0 text-black dark:text-gray-100">To</p>
+                                                            <div className="flex gap-2 items-center w-full">
+                                                                {selectedNetworks.length > 0 && (
+                                                                    <>
+                                                                        {selectedNetworks.map((network) => (
+                                                                            <div key={network} className="min-w-[24px] w-6 min-h-[24px] h-6 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center text-white text-xs font-medium">
+                                                                                {network.charAt(0)}
+                                                                            </div>
+                                                                        ))}
+                                                                    </>
+                                                                )}
+                                                                <input
+                                                                    type="text"
+                                                                    value={toAddress}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.value) {
+                                                                            setToAddress('bob.eth@op');
+                                                                            if (!selectedNetworks.includes('Optimism')) {
+                                                                                setSelectedNetworks(prev => [...prev, 'Optimism']);
+                                                                            }
+                                                                            setShowNetworkSelection(false);
+                                                                        } else {
+                                                                            setToAddress('');
+                                                                        }
+                                                                    }}
+                                                                    onFocus={() => setShowNetworkSelection(true)}
+                                                                    placeholder="Wallet address or ENS name"
+                                                                    className="font-bold relative shrink-0 text-black dark:text-gray-100 bg-transparent outline-none border-none flex-1 placeholder:text-[#ddd] dark:placeholder:text-gray-600"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Network Selection Modal */}
+                                {showNetworkSelection && (
+                                    <div 
+                                        className="absolute top-[480px] left-0 right-0 px-[32px] z-10"
+                                        onClick={() => setShowNetworkSelection(false)}
+                                    >
+                                        <div 
+                                            className="bg-white dark:bg-gray-800 p-4 rounded-[20px] border border-black dark:border-gray-600"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <p className="font-bold text-[14px] mb-3 text-black dark:text-gray-100">Select Networks</p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    disabled
+                                                    className="p-3 rounded-[12px] border-2 border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="min-w-[24px] w-6 min-h-[24px] h-6 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center text-white text-xs font-medium">
+                                                            A
+                                                        </div>
+                                                        <span className="font-medium text-[14px] text-gray-900 dark:text-gray-300">Arbitrum</span>
+                                                    </div>
+                                                </button>
+                                                
+                                                <button
+                                                    onClick={() => {
+                                                        toggleNetwork('Optimism');
+                                                        setShowNetworkSelection(false);
+                                                    }}
+                                                    className={`p-3 rounded-[12px] border-2 transition-all ${
+                                                        selectedNetworks.includes('Optimism')
+                                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                                                            : 'border-gray-200 dark:border-gray-700'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="min-w-[24px] w-6 min-h-[24px] h-6 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center text-white text-xs font-medium">
+                                                            O
+                                                        </div>
+                                                        <span className="font-medium text-[14px] text-gray-900 dark:text-gray-300">Optimism</span>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Bottom Section */}
+                                <div className="content-stretch flex flex-col gap-[20px] items-start justify-end relative shrink-0 w-full">
+                                    {/* Button */}
+                                    <div className="content-stretch flex gap-[3px] h-[52.55px] items-center relative shrink-0 w-full">
+                                        <button
+                                            onClick={handleConfirm}
+                                            disabled={!amount || !toAddress || selectedNetworks.length === 0}
+                                            className="basis-0 bg-[#007FFF] grow h-[52px] min-h-px min-w-px relative rounded-[100px] shrink-0 disabled:opacity-50 shadow-lg shadow-[#007FFF]/30"
+                                        >
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <div className="content-stretch flex items-center justify-center p-[10px] relative w-full h-full">
+                                                    <p className="font-medium leading-[22px] relative shrink-0 text-[16px] whitespace-nowrap text-white">
+                                                        Confirm
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Sign Preview Screen - EXACT FROM REACT
+        function SignPreviewScreen({ amount, toAddress, selectedNetworks, onSign, onBack }) {
+            const providerFee = parseFloat(amount) * 0.10;
+            const providerFeeUSD = (providerFee * 0.999).toFixed(2);
+            const fee = providerFee.toFixed(2);
+            const gasFee = 0.2343434;
+            const gasFeeUSD = (gasFee * 0.999).toFixed(2);
+            const amountNum = parseFloat(amount);
+            const amountUSD = (amountNum * 0.999).toFixed(2);
+            const feeNum = parseFloat(fee);
+            
+            const totalMin = (amountNum + feeNum + gasFee).toFixed(2);
+            const totalMax = (amountNum + feeNum + gasFee + 0.5).toFixed(2);
+            const totalMinUSD = (parseFloat(totalMin) * 0.999).toFixed(2);
+            const totalMaxUSD = (parseFloat(totalMax) * 0.999).toFixed(2);
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 content-stretch flex h-[784.405px] items-start justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="basis-0 content-stretch flex flex-col gap-[21px] grow h-full items-start min-h-px min-w-px relative shrink-0">
+                            {/* Close Button */}
+                            <div className="content-stretch flex items-center justify-end relative shrink-0 w-full">
+                                <button onClick={onBack} className="relative shrink-0 w-[24px] h-[24px] rounded-full bg-gray-200/50 dark:bg-gray-700/50 backdrop-blur-sm flex items-center justify-center hover:bg-gray-300/60 dark:hover:bg-gray-600/60 transition-colors">
+                                    <svg className="block w-[16px] h-[16px]" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                        <path d="M15 9L9 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                        <path d="M9 9L15 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Header */}
+                            <div className="basis-0 bg-white dark:bg-gray-900 content-stretch flex flex-col gap-[24px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+                                    <div className="content-stretch flex flex-col items-center relative shrink-0 w-full">
+                                        <p className="font-bold h-[24.241px] leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[20px] text-center w-full">Sign Preview</p>
+                                    </div>
+                                </div>
+
+                                {/* Transaction Details */}
+                                <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center px-[16px] py-0 relative w-full">
+                                                <p className="font-semibold leading-[23.542px] not-italic relative shrink-0 text-[#22221d] dark:text-gray-100 text-[14px] text-center whitespace-nowrap">Cross-chain send</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Amount Card */}
+                                    <div className="content-stretch flex flex-col items-center relative shrink-0 w-full">
+                                        <div className="content-stretch flex flex-col items-end relative rounded-[20px] shrink-0 w-full">
+                                            <div aria-hidden="true" className="absolute border border-black dark:border-gray-600 border-solid inset-[-1px] pointer-events-none rounded-[21px]" />
+                                            
+                                            {/* Amount */}
+                                            <div className="relative shrink-0 w-full">
+                                                <div className="flex flex-col items-end justify-center w-full h-full">
+                                                    <div className="bg-white dark:bg-gray-800 rounded-t-[20px] content-stretch flex flex-col gap-[10px] items-end justify-center px-[20px] py-[24px] relative w-full">
+                                                        <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
+                                                            <div className="relative shrink-0 w-[32px] h-[32px]">
+                                                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 32 32">
+                                                                    <path d={svgPaths.p17d47b00} fill="black" className="dark:fill-gray-700" stroke="white" className="dark:stroke-gray-300" strokeWidth="1.33333" />
+                                                                    <g>
+                                                                        <path d={svgPaths.p18e7e00} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="2" />
+                                                                        <path d={svgPaths.p2170d180} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="2" />
+                                                                        <path d={svgPaths.p727e900} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="2" />
+                                                                        <path d={svgPaths.p3c2ddc00} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="2" />
+                                                                        <path d={svgPaths.p30f0fa00} stroke="white" className="dark:stroke-gray-300" strokeLinecap="round" strokeWidth="2" />
+                                                                    </g>
+                                                                </svg>
+                                                            </div>
+                                                            <div className="flex flex-col font-semibold justify-center leading-[0] relative shrink-0 text-[48px] text-black dark:text-gray-100 whitespace-nowrap text-right">
+                                                                <p className="leading-[23.542px]">-{amount} USDC</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col font-medium justify-center leading-[0] relative shrink-0 text-[#8f8f8f] dark:text-gray-400 text-[16px] text-right w-full">
+                                                            <p className="leading-[23.542px]">${amountUSD}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Divider */}
+                                            <div className="h-0 relative shrink-0 w-full">
+                                                <div className="absolute inset-[-0.5px_0]">
+                                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 329 1">
+                                                        <path d="M0 0.5H329" stroke="black" className="dark:stroke-gray-600" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            {/* To Section */}
+                                            <div className="relative shrink-0 w-full">
+                                                <div className="flex flex-col items-end justify-center w-full h-full">
+                                                    <div className="bg-white dark:bg-gray-800 rounded-b-[20px] content-stretch flex flex-col gap-[10px] items-end justify-center p-[20px] relative w-full">
+                                                        <div className="content-stretch flex h-[24px] items-center justify-between relative shrink-0 w-full">
+                                                            <p className="font-black leading-[23.542px] relative shrink-0 text-[14px] text-black dark:text-gray-100 text-center whitespace-nowrap">To</p>
+                                                            <div className="bg-[#efefef] dark:bg-gray-700 content-stretch flex gap-[4px] items-center px-[9px] py-[4px] relative rounded-[100px] shrink-0">
+                                                                <div className="relative rounded-[66.667px] shrink-0 w-[16px] h-[16px]">
+                                                                    <div className="overflow-clip relative rounded-[inherit] w-full h-full">
+                                                                        <div className="absolute inset-[-0.04%_0_0.04%_0]">
+                                                                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 16">
+                                                                                <path d={svgPaths.p1b571080} fill="black" className="dark:fill-gray-300" />
+                                                                            </svg>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div aria-hidden="true" className="absolute border-0 border-black dark:border-gray-600 border-solid inset-0 pointer-events-none rounded-[66.667px]" />
+                                                                </div>
+                                                                <div className="flex flex-col font-medium justify-center leading-[0] relative shrink-0 text-[#414040] dark:text-gray-300 text-[12px] whitespace-nowrap text-right tracking-[0.0048px]">
+                                                                    <p className="leading-[1.3]">Optimism</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
+                                                            <div className="basis-0 content-stretch flex gap-[8px] grow items-center min-h-px min-w-px relative shrink-0">
+                                                                <div className="basis-0 content-stretch flex gap-[8px] grow h-[22px] items-center min-h-px min-w-px relative shrink-0">
+                                                                    <div className="relative shrink-0 w-[22px] h-[22px]">
+                                                                        <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 22 22">
+                                                                            <circle cx="11" cy="11" fill="#D9D9D9" className="dark:fill-gray-600" r="11" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <p className="font-medium leading-[22px] not-italic relative shrink-0 text-[14px] text-black dark:text-gray-100 text-center whitespace-nowrap">{toAddress}</p>
+                                                                </div>
+                                                                <div className="relative shrink-0 w-[12px] h-[12px]">
+                                                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 12 12">
+                                                                        <path d={svgPaths.p32607400} stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" />
+                                                                        <path d="M8 1.5H10.5V4" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" />
+                                                                        <path d="M10.25 1.75L6 5.75" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bottom Section */}
+                            <div className="content-stretch flex flex-col gap-[20px] items-start justify-end relative shrink-0 w-full">
+                                {/* Review Details */}
+                                <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full">
+                                    {/* Sender */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-400 text-[14px] text-center whitespace-nowrap">Sender</p>
+                                                <p className="font-bold leading-[22px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[14px]">alice.eth@arb</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Network */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-400 text-[14px] text-center whitespace-nowrap">Network</p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center">
+                                                        <span className="text-white text-[10px] font-medium">A</span>
+                                                    </div>
+                                                    <p className="font-bold leading-[22px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[14px]">Arbitrum</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Gas fee */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-400 text-[14px] text-center whitespace-nowrap">Gas fee</p>
+                                                <div className="content-stretch flex gap-[2px] items-start justify-end leading-[22px] relative shrink-0 text-[14px] whitespace-nowrap">
+                                                    <p className="font-bold relative shrink-0 text-[#22221d] dark:text-gray-100">0.2343434 USDC</p>
+                                                    <p className="font-medium relative shrink-0 text-[#8f8f8f] dark:text-gray-400 text-center">(${gasFeeUSD})</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Provider fee */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-400 text-[14px] text-center whitespace-nowrap">Provider fee</p>
+                                                <div className="content-stretch flex gap-[2px] items-start justify-end leading-[22px] relative shrink-0 text-[14px] whitespace-nowrap">
+                                                    <p className="font-bold relative shrink-0 text-[#22221d] dark:text-gray-100">{fee} USDC</p>
+                                                    <p className="font-medium relative shrink-0 text-[#8f8f8f] dark:text-gray-400 text-center">(${providerFeeUSD})</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Expiry */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-400 text-[14px] text-center whitespace-nowrap">Expiry time</p>
+                                                <p className="font-bold leading-[22px] relative shrink-0 text-[#8f8f8f] dark:text-gray-400 text-[14px]">04/23/28 04:34:22</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="h-0 relative shrink-0 w-full my-1">
+                                        <div className="absolute inset-[-0.5px_0]">
+                                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 329 1">
+                                                <path d="M0 0.5H329" stroke="black" className="dark:stroke-gray-600" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    {/* Total */}
+                                    <div className="relative shrink-0 w-full">
+                                        <div className="flex flex-row items-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-between px-[8px] py-[2px] relative w-full">
+                                                <p className="font-bold leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[14px] text-center whitespace-nowrap">Total</p>
+                                                <div className="content-stretch flex gap-[2px] items-start justify-end leading-[22px] relative shrink-0 text-[14px] whitespace-nowrap">
+                                                    <p className="font-bold relative shrink-0 text-[#22221d] dark:text-gray-100">{totalMin} ~ {totalMax} USDC</p>
+                                                    <p className="font-medium relative shrink-0 text-[#8f8f8f] dark:text-gray-400 text-center">(${totalMinUSD} ~ ${totalMaxUSD})</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Info Box */}
+                                <div className="bg-[#efefef] dark:bg-gray-800 relative rounded-[12px] shrink-0 w-full">
+                                    <div className="content-stretch flex flex-col items-start px-[12px] py-[8px] relative w-full">
+                                        <div className="content-stretch flex gap-[4px] items-center relative shrink-0 w-full">
+                                            <div className="content-stretch flex gap-[8px] items-start relative shrink-0 w-full">
+                                                <div className="flex items-center justify-center relative shrink-0">
+                                                    <div className="flex-none scale-y-[-100%]">
+                                                        <div className="relative w-[24px] h-[24px]">
+                                                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                                                <path d={svgPaths.pace200} stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                                                <path d="M12 8V12" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                                                <path d="M12 16H12.01" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="basis-0 flex flex-col font-normal grow justify-center leading-[0] min-h-px min-w-px relative self-stretch shrink-0 text-[12px] text-black dark:text-gray-300">
+                                                    <p className="leading-[normal]">Sign once, and it sends across all selected chains in ~20 seconds.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sign Button */}
+                                <div className="content-stretch flex gap-[3px] h-[52.55px] items-center relative shrink-0 w-full">
+                                    <button
+                                        onClick={onSign}
+                                        className="basis-0 bg-[#007FFF] grow h-[52px] min-h-px min-w-px relative rounded-[100px] shrink-0 shadow-lg shadow-[#007FFF]/30"
+                                    >
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <div className="content-stretch flex items-center justify-center p-[10px] relative w-full h-full">
+                                                <p className="font-medium leading-[22px] relative shrink-0 text-[16px] whitespace-nowrap text-white">
+                                                    Sign Once to Send
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Send Progress Screen - EXACT FROM REACT
+        function SendProgressScreen({ amount, toAddress, onComplete }) {
+            const [currentStep, setCurrentStep] = useState(0);
+
+            const steps = [
+                `${amount} USDC (ARB → OP) preparing....`,
+                'Paymaster fee applied ...',
+                'Bridge in progress (ensure enough funds)....',
+                'Sending funds to Optimism. ....',
+                `Success! ${amount} USDC received on Optimism.`
+            ];
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setCurrentStep(prev => {
+                        if (prev < steps.length - 1) {
+                            return prev + 1;
+                        } else {
+                            clearInterval(timer);
+                            setTimeout(() => onComplete(), 2000);
+                            return prev;
+                        }
+                    });
+                }, 3000);
+
+                return () => clearInterval(timer);
+            }, [steps.length, onComplete]);
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 content-stretch flex h-[784.405px] items-start justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="basis-0 content-stretch flex flex-col gap-[21px] grow h-full items-start min-h-px min-w-px relative shrink-0">
+                            {/* Close Button */}
+                            <div className="content-stretch flex items-center justify-end relative shrink-0 w-full">
+                                <div className="relative shrink-0 w-[24px] h-[24px]">
+                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                        <rect fill="white" className="dark:fill-gray-900" height="24" width="24" />
+                                        <path d={svgPaths.pace200} fill="#EFEFEF" className="dark:fill-gray-800" />
+                                        <path d="M15 9L9 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                        <path d="M9 9L15 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="basis-0 bg-white dark:bg-gray-900 content-stretch flex flex-col gap-[60px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                {/* Header */}
+                                <div className="basis-0 content-stretch flex flex-col gap-[48px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                    <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+                                        <div className="content-stretch flex flex-col gap-[48px] items-center relative shrink-0 w-full">
+                                            <p className="font-bold h-[24.241px] leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[20px] text-center w-full">sending...</p>
+                                            
+                                            {/* Network Flow Visualization */}
+                                            <div className="content-center flex flex-wrap gap-[1px_11px] items-center relative">
+                                                {/* Arbitrum Icon */}
+                                                <motion.div
+                                                    className="bg-black content-stretch flex items-center justify-center relative rounded-[120px] w-[24px] h-[24px]"
+                                                    animate={{ scale: [1, 1.1, 1] }}
+                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                >
+                                                    <img 
+                                                        src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=040" 
+                                                        alt="Arbitrum" 
+                                                        className="w-full h-full"
+                                                    />
+                                                </motion.div>
+
+                                                {/* Arrow */}
+                                                <motion.div
+                                                    className="h-0 relative shrink-0 w-[32.191px]"
+                                                    animate={{ opacity: [0.3, 1, 0.3] }}
+                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                >
+                                                    <div className="absolute inset-[-2.5px_-7.77%]">
+                                                        <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 37.1914 5">
+                                                            <path d="M2.5 2.5H34.6914" stroke="url(#paint0_linear_6_939)" strokeLinecap="round" strokeWidth="5" />
+                                                            <defs>
+                                                                <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_6_939" x1="2.5" x2="34.6914" y1="3" y2="3">
+                                                                    <stop stopColor="#ffffff" />
+                                                                    <stop offset="1" stopColor="#3a3a3a" />
+                                                                </linearGradient>
+                                                            </defs>
+                                                        </svg>
+                                                    </div>
+                                                </motion.div>
+
+                                                {/* Middle Circle */}
+                                                <motion.div
+                                                    className="relative shrink-0 w-[22px] h-[22px]"
+                                                    animate={{ 
+                                                        scale: [1, 1.2, 1],
+                                                        rotate: [0, 360]
+                                                    }}
+                                                    transition={{ 
+                                                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                                                        rotate: { duration: 4, repeat: Infinity, ease: "linear" }
+                                                    }}
+                                                >
+                                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 22 22">
+                                                        <circle cx="11" cy="11" fill="#4a4a4a" r="11" />
+                                                    </svg>
+                                                </motion.div>
+
+                                                {/* Arrow */}
+                                                <motion.div
+                                                    className="h-0 relative shrink-0 w-[32.191px]"
+                                                    animate={{ opacity: [0.3, 1, 0.3] }}
+                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                                                >
+                                                    <div className="absolute inset-[-2.5px_-7.77%]">
+                                                        <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 37.1914 5">
+                                                            <path d="M2.5 2.5H34.6914" stroke="url(#paint0_linear_6_939_2)" strokeLinecap="round" strokeWidth="5" />
+                                                            <defs>
+                                                                <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_6_939_2" x1="2.5" x2="34.6914" y1="3" y2="3">
+                                                                    <stop stopColor="#ffffff" />
+                                                                    <stop offset="1" stopColor="#3a3a3a" />
+                                                                </linearGradient>
+                                                            </defs>
+                                                        </svg>
+                                                    </div>
+                                                </motion.div>
+
+                                                {/* Optimism Icon */}
+                                                <motion.div
+                                                    className="bg-black content-stretch flex items-center justify-center relative rounded-[120px] w-[24px] h-[24px]"
+                                                    animate={{ scale: [1, 1.1, 1] }}
+                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                                                >
+                                                    <img 
+                                                        src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=040" 
+                                                        alt="Optimism" 
+                                                        className="w-full h-full"
+                                                    />
+                                                </motion.div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Steps */}
+                                    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0 w-full">
+                                        <div className="[grid-area:1_/_1] content-stretch flex flex-col gap-[8px] items-start ml-0 mt-[29.44px] relative w-[329px]">
+                                            {steps.map((step, index) => {
+                                                const isCompleted = index < currentStep;
+                                                const isCurrent = index === currentStep;
+                                                const isPending = index > currentStep;
+                                                
+                                                return (
+                                                    <motion.div
+                                                        key={index}
+                                                        className="content-stretch flex gap-[8px] items-center relative shrink-0"
+                                                        animate={{ opacity: isCompleted ? 1 : isCurrent ? 0.9 : 0.5 }}
+                                                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                                                    >
+                                                        <motion.div
+                                                            className="overflow-clip relative shrink-0 w-[24px] h-[24px]"
+                                                            animate={{ scale: isCurrent ? [1, 1.1, 1] : 1 }}
+                                                            transition={{ 
+                                                                duration: 1.5,
+                                                                repeat: isCurrent ? Infinity : 0,
+                                                                ease: "easeInOut"
+                                                            }}
+                                                        >
+                                                            {isCompleted ? (
+                                                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                                                    <path d={svgPaths.p320cb280} fill="#22c55e" className="dark:fill-green-400" />
+                                                                </svg>
+                                                            ) : (
+                                                                <div className="absolute inset-[12.5%]">
+                                                                    <div className="absolute inset-[-5.56%]">
+                                                                        <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 20 20">
+                                                                            <path d={svgPaths.p7c2b200} stroke="#191C1E" className={isCurrent ? "dark:stroke-gray-100" : "dark:stroke-gray-500"} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                                                        </svg>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </motion.div>
+                                                        <p className={`font-bold leading-[22px] relative shrink-0 text-[12px] whitespace-nowrap ${
+                                                            isCompleted 
+                                                                ? 'text-gray-900 dark:text-gray-100' 
+                                                                : isCurrent 
+                                                                ? 'text-gray-700 dark:text-gray-300' 
+                                                                : 'text-gray-500 dark:text-gray-500'
+                                                        }`}>{step}</p>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Success Screen - EXACT FROM REACT
+        function SuccessScreen({ amount, onBackToSend, onViewHistory }) {
+            const providerFee = parseFloat(amount) * 0.10;
+            const gasFee = 0.2343434;
+            const fee = (providerFee + gasFee).toFixed(2);
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="absolute bg-white dark:bg-gray-900 content-stretch flex h-[784.405px] items-start justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]"
+                    >
+                        <div className="basis-0 content-stretch flex flex-col gap-[21px] grow h-full items-start min-h-px min-w-px relative shrink-0">
+                            {/* Close Button */}
+                            <div className="content-stretch flex items-center justify-end relative shrink-0 w-full">
+                                <div className="relative shrink-0 w-[24px] h-[24px]">
+                                    <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+                                        <rect fill="white" className="dark:fill-gray-900" height="24" width="24" />
+                                        <path d={svgPaths.pace200} fill="#EFEFEF" className="dark:fill-gray-800" />
+                                        <path d="M15 9L9 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                        <path d="M9 9L15 15" stroke="#191C1E" className="dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="basis-0 bg-white dark:bg-gray-900 content-stretch flex flex-col gap-[60px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                {/* Header */}
+                                <div className="basis-0 content-stretch flex flex-col gap-[48px] grow items-center min-h-px min-w-px relative shrink-0 w-full">
+                                    <div className="content-stretch flex flex-col items-center justify-center relative shrink-0 w-full">
+                                        <div className="content-stretch flex flex-col gap-[48px] items-center relative shrink-0 w-full">
+                                            <motion.p
+                                                initial={{ opacity: 0, y: -20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.5, delay: 0.2 }}
+                                                className="font-bold h-[24.241px] leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-100 text-[20px] text-center w-full"
+                                            >
+                                                Success
+                                            </motion.p>
+                                            
+                                            {/* Check Icon with Animation */}
+                                            <motion.div
+                                                initial={{ scale: 0, rotate: -180 }}
+                                                animate={{ scale: 1, rotate: 0 }}
+                                                transition={{ 
+                                                    duration: 0.6, 
+                                                    delay: 0.3,
+                                                    type: "spring",
+                                                    stiffness: 200,
+                                                    damping: 15
+                                                }}
+                                                className="relative shrink-0 w-[76.513px] h-[76.513px]"
+                                            >
+                                                <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 76.5129 76.5129">
+                                                    <motion.path
+                                                        d={svgPaths.p530df40}
+                                                        stroke="#0E9E34"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="6.37608"
+                                                        initial={{ pathLength: 0 }}
+                                                        animate={{ pathLength: 1 }}
+                                                        transition={{ duration: 0.5, delay: 0.6, ease: "easeInOut" }}
+                                                    />
+                                                    <motion.path
+                                                        d={svgPaths.p25f51000}
+                                                        stroke="#0E9E34"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="6.37608"
+                                                        initial={{ pathLength: 0 }}
+                                                        animate={{ pathLength: 1 }}
+                                                        transition={{ duration: 0.4, delay: 0.8, ease: "easeInOut" }}
+                                                    />
+                                                </svg>
+                                            </motion.div>
+                                        </div>
+                                    </div>
+                                    
+                                    <motion.p
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.5, delay: 1 }}
+                                        className="font-medium leading-[23.542px] relative shrink-0 text-[#22221d] dark:text-gray-300 text-[14px] text-center w-full"
+                                    >
+                                        Sent ${amount} USDC to OP, with a ${fee} fee applied.
+                                    </motion.p>
+                                </div>
+
+                                {/* Bottom Button */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 1.2 }}
+                                    className="content-stretch flex flex-col items-start justify-end relative shrink-0 w-full"
+                                >
+                                    <div className="content-stretch flex gap-[3px] h-[52.55px] items-center relative shrink-0 w-full">
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={onViewHistory || onBackToSend}
+                                            className="basis-0 bg-[#007FFF] grow h-[52px] min-h-px min-w-px relative rounded-[100px] shrink-0 cursor-pointer shadow-lg shadow-[#007FFF]/30"
+                                        >
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <div className="content-stretch flex items-center justify-center p-[10px] relative w-full h-full">
+                                                    <p className="font-medium leading-[22px] relative shrink-0 text-[16px] whitespace-nowrap text-white">
+                                                        Check history
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </motion.button>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            );
+        }
+
+        // History Screen - EXACT FROM REACT
+        function HistoryScreen({ transactions, onBack }) {
+            const formatDate = (date) => {
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                if (diffHours < 24) return `${diffHours}h ago`;
+                if (diffDays < 7) return `${diffDays}d ago`;
+                
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            };
+
+            const TransactionCard = ({ transaction }) => {
+                const statusColors = {
+                    success: 'text-green-500 dark:text-green-400',
+                    pending: 'text-yellow-500 dark:text-yellow-400',
+                    failed: 'text-red-500 dark:text-red-400'
+                };
+
+                const statusBgColors = {
+                    success: 'bg-green-100 dark:bg-green-900/30',
+                    pending: 'bg-yellow-100 dark:bg-yellow-900/30',
+                    failed: 'bg-red-100 dark:bg-red-900/30'
+                };
+
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <span className="text-white text-sm font-bold">$</span>
+                                </div>
+                                <div>
+                                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                                        {transaction.amount} {transaction.asset}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {formatDate(transaction.timestamp)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full ${statusBgColors[transaction.status]}`}>
+                                <p className={`text-xs font-bold capitalize ${statusColors[transaction.status]}`}>
+                                    {transaction.status}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-5 h-5 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center">
+                                    <span className="text-white text-[10px] font-medium">A</span>
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    {transaction.fromNetwork}
+                                </span>
+                            </div>
+                            
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-5 h-5 rounded-full overflow-hidden">
+                                    <img 
+                                        src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=040" 
+                                        alt={transaction.toNetwork}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    {transaction.toNetwork}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">To</span>
+                            <span className="font-bold text-gray-900 dark:text-gray-100">{transaction.toAddress}</span>
+                        </div>
+                    </motion.div>
+                );
+            };
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <div className="absolute contents left-[-1px] right-[-1px] top-[-1px]">
+                        <StatusBarComponent />
+                    </div>
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[21px] w-full h-full">
+                            <div className="flex items-center justify-between w-full">
+                                <button 
+                                    onClick={onBack}
+                                    className="w-[24px] h-[24px] rounded-full bg-gray-200/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-gray-300/60 dark:hover:bg-gray-600/60 transition-colors"
+                                >
+                                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24">
+                                        <path d="M15 18L9 12L15 6" stroke="currentColor" className="stroke-gray-900 dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </button>
+                                <p className="font-bold text-[20px] text-gray-900 dark:text-gray-100">Transaction History</p>
+                                <div className="w-[24px]" />
+                            </div>
+
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Transactions</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{transactions.length}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto w-full space-y-3 pr-1">
+                                {transactions.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
+                                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">No transactions yet</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Your transaction history will appear here</p>
+                                    </div>
+                                ) : (
+                                    transactions.map((transaction) => (
+                                        <TransactionCard key={transaction.id} transaction={transaction} />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App - EXACT FROM REACT
+        function App() {
+            const [currentScreen, setCurrentScreen] = useState('landing');
+            const [transactionData, setTransactionData] = useState(null);
+            const [transactionHistory, setTransactionHistory] = useState([]);
+
+            const handleStartSend = () => setCurrentScreen('form');
+            
+            const handleConfirm = (data) => {
+                setTransactionData(data);
+                setCurrentScreen('preview');
+            };
+
+            const handleSign = () => setCurrentScreen('progress');
+            
+            const handleBack = () => setCurrentScreen('form');
+
+            const handleComplete = () => {
+                if (transactionData) {
+                    const newTransaction = {
+                        id: `tx-${Date.now()}`,
+                        asset: 'USDC',
+                        amount: transactionData.amount,
+                        fromNetwork: 'Arbitrum',
+                        toNetwork: 'Optimism',
+                        toAddress: transactionData.toAddress,
+                        timestamp: new Date(),
+                        status: 'success'
+                    };
+                    setTransactionHistory(prev => [newTransaction, ...prev]);
+                }
+                setCurrentScreen('success');
+            };
+
+            const handleBackToSend = () => {
+                setCurrentScreen('form');
+                setTransactionData(null);
+            };
+
+            const handleViewHistory = () => setCurrentScreen('history');
+            
+            const handleBackFromHistory = () => setCurrentScreen('form');
+
+            return (
+                <>
+                    {currentScreen === 'landing' && <LandingScreen onStartSend={handleStartSend} />}
+                    {currentScreen === 'form' && <SendFormScreen onConfirm={handleConfirm} />}
+                    {currentScreen === 'preview' && transactionData && (
+                        <SignPreviewScreen
+                            amount={transactionData.amount}
+                            toAddress={transactionData.toAddress}
+                            selectedNetworks={transactionData.selectedNetworks}
+                            onSign={handleSign}
+                            onBack={handleBack}
+                        />
+                    )}
+                    {currentScreen === 'progress' && transactionData && (
+                        <SendProgressScreen
+                            amount={transactionData.amount}
+                            toAddress={transactionData.toAddress}
+                            onComplete={handleComplete}
+                        />
+                    )}
+                    {currentScreen === 'success' && transactionData && (
+                        <SuccessScreen
+                            amount={transactionData.amount}
+                            onBackToSend={handleBackToSend}
+                            onViewHistory={handleViewHistory}
+                        />
+                    )}
+                    {currentScreen === 'history' && (
+                        <HistoryScreen
+                            transactions={transactionHistory}
+                            onBack={handleBackFromHistory}
+                        />
+                    )}
+                </>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

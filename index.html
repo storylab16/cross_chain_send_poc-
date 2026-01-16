@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Chain Transaction Prototype</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@11/dist/framer-motion.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=SF+Pro:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', sans-serif;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #root {
+            width: 393px;
+            height: 852px;
+        }
+
+        /* Custom scrollbar for dark mode */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // SVG Paths
+        const svgPaths = {
+            p18b35300: "M8.5713 2.46628C11.0584 2.46639 13.4504 3.38847 15.2529 5.04195C15.3887 5.1696 15.6056 5.16799 15.7393 5.03834L17.0368 3.77487C17.1045 3.70911 17.1422 3.62004 17.1417 3.52735C17.1411 3.43467 17.1023 3.34603 17.0338 3.28104C12.3028 -1.09368 4.83907 -1.09368 0.108056 3.28104C0.039524 3.34598 0.000639766 3.4346 7.82398e-06 3.52728C-0.000624118 3.61996 0.0370483 3.70906 0.104689 3.77487L1.40255 5.03834C1.53615 5.16819 1.75327 5.1698 1.88893 5.04195C3.69167 3.38836 6.08395 2.46628 8.5713 2.46628ZM8.56795 6.68656C9.92527 6.68647 11.2341 7.19821 12.2403 8.12234C12.3763 8.2535 12.5907 8.25065 12.7234 8.11593L14.0106 6.79663C14.0784 6.72742 14.1161 6.63355 14.1151 6.53599C14.1141 6.43844 14.0746 6.34536 14.0054 6.27757C10.9416 3.38672 6.19688 3.38672 3.13305 6.27757C3.06384 6.34536 3.02435 6.43849 3.02345 6.53607C3.02254 6.63365 3.06028 6.72752 3.12822 6.79663L4.41513 8.11593C4.54778 8.25065 4.76215 8.2535 4.89823 8.12234C5.90368 7.19882 7.21152 6.68713 8.56795 6.68656ZM11.0924 9.48011C11.0943 9.58546 11.0572 9.68703 10.9899 9.76084L8.81327 12.2156C8.74946 12.2877 8.66247 12.3283 8.5717 12.3283C8.48093 12.3283 8.39394 12.2877 8.33013 12.2156L6.1531 9.76084C6.08585 9.68697 6.04886 9.58537 6.05085 9.48002C6.05284 9.37467 6.09365 9.27491 6.16364 9.20429C7.55374 7.8904 9.58966 7.8904 10.9798 9.20429C11.0497 9.27497 11.0904 9.37476 11.0924 9.48011Z",
+            p1e09e400: "M19.2 1.14623C19.2 0.513183 18.7224 0 18.1333 0H17.0667C16.4776 0 16 0.513183 16 1.14623V11.0802C16 11.7132 16.4776 12.2264 17.0667 12.2264H18.1333C18.7224 12.2264 19.2 11.7132 19.2 11.0802V1.14623ZM11.7659 2.44528H12.8326C13.4217 2.44528 13.8992 2.97078 13.8992 3.61902V11.0527C13.8992 11.7009 13.4217 12.2264 12.8326 12.2264H11.7659C11.1768 12.2264 10.6992 11.7009 10.6992 11.0527V3.61902C10.6992 2.97078 11.1768 2.44528 11.7659 2.44528ZM7.43411 5.09433H6.36745C5.77834 5.09433 5.30078 5.62652 5.30078 6.28301V11.0377C5.30078 11.6942 5.77834 12.2264 6.36745 12.2264H7.43411C8.02322 12.2264 8.50078 11.6942 8.50078 11.0377V6.28301C8.50078 5.62652 8.02322 5.09433 7.43411 5.09433ZM2.13333 7.53962H1.06667C0.477563 7.53962 0 8.06421 0 8.71132V11.0547C0 11.7018 0.477563 12.2264 1.06667 12.2264H2.13333C2.72244 12.2264 3.2 11.7018 3.2 11.0547V8.71132C3.2 8.06421 2.72244 7.53962 2.13333 7.53962Z",
+            p3bbd9700: "M26 4.78113V8.8566C26.8047 8.51143 27.328 7.70847 27.328 6.81886C27.328 5.92926 26.8047 5.1263 26 4.78113",
+            p530df40: "M49.4147 30.3008L31.8805 47.8525L25.1827 41.1547",
+            pace200: "M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+        };
+
+        // StatusBar Component
+        function StatusBarComponent() {
+            return (
+                <div className="absolute flex gap-[154px] items-center justify-center left-0 pb-[19px] pt-[21px] px-[16px] right-0 top-0">
+                    <div className="flex grow h-[22px] items-center justify-center pb-0 pt-[2px] px-0">
+                        <p className="font-semibold leading-[22px] text-[17px] text-black dark:text-white text-center whitespace-nowrap">
+                            9:41
+                        </p>
+                    </div>
+                    <div className="flex gap-[7px] grow h-[22px] items-center justify-center pb-0 pt-px px-0">
+                        <div className="h-[12.226px] w-[19.2px]">
+                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 19.2 12.2264">
+                                <path clipRule="evenodd" d={svgPaths.p1e09e400} fill="black" className="dark:fill-white" fillRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="h-[12.328px] w-[17.142px]">
+                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 17.1417 12.3283">
+                                <path clipRule="evenodd" d={svgPaths.p18b35300} fill="black" className="dark:fill-white" fillRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="h-[13px] w-[27.328px]">
+                            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 27.328 13">
+                                <g>
+                                    <rect height="12" opacity="0.35" rx="3.8" stroke="black" className="dark:stroke-white" width="24" x="0.5" y="0.5" />
+                                    <path d={svgPaths.p3bbd9700} fill="black" className="dark:fill-white" opacity="0.4" />
+                                    <rect fill="black" className="dark:fill-white" height="9" rx="2.5" width="21" x="2" y="2" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Landing Screen
+        function LandingScreen({ onStartSend }) {
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex flex-col h-[784.405px] items-center justify-center left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[32px] items-center w-full max-w-[329px]">
+                            {/* Logo */}
+                            <motion.div 
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5 }}
+                                className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl"
+                            >
+                                <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </motion.div>
+
+                            {/* Title */}
+                            <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-center space-y-2"
+                            >
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    Cross-Chain Bridge
+                                </h1>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    Transfer assets seamlessly across networks
+                                </p>
+                            </motion.div>
+
+                            {/* Features */}
+                            <motion.div 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="w-full space-y-3"
+                            >
+                                <div className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Fast Transfers</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Complete in minutes</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Secure Bridge</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Your assets are safe</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Send Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                onClick={onStartSend}
+                                className="w-full h-[52px] bg-[#007FFF] rounded-full shadow-lg shadow-[#007FFF]/30 cursor-pointer flex items-center justify-center"
+                            >
+                                <p className="font-semibold text-[16px] text-white">
+                                    Start Send
+                                </p>
+                            </motion.button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Send Form Screen
+        function SendFormScreen({ onConfirm }) {
+            const [amount, setAmount] = useState('');
+            const [toAddress, setToAddress] = useState('');
+            const [showNetworks, setShowNetworks] = useState(false);
+            const [selectedNetworks, setSelectedNetworks] = useState([]);
+            const [balance] = useState(1000);
+
+            const providerFee = amount ? (parseFloat(amount) * 0.1).toFixed(2) : '0.00';
+            const gasFee = '0.2343434';
+            const totalFees = amount ? (parseFloat(providerFee) + parseFloat(gasFee)).toFixed(7) : '0.00';
+            const amountUSD = amount ? (parseFloat(amount) * 0.9998).toFixed(2) : '0.00';
+            const feesUSD = amount ? (parseFloat(totalFees) * 0.9998).toFixed(7) : '0.00';
+
+            const handleAmountChange = (e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setAmount(value);
+                }
+            };
+
+            const handleToAddressChange = (e) => {
+                const value = e.target.value;
+                setToAddress(value);
+                setShowNetworks(value.includes('.eth'));
+            };
+
+            const toggleNetwork = (network) => {
+                setSelectedNetworks(prev => 
+                    prev.includes(network) 
+                        ? prev.filter(n => n !== network)
+                        : [...prev, network]
+                );
+            };
+
+            const handleConfirmClick = () => {
+                if (amount && toAddress && selectedNetworks.length > 0) {
+                    onConfirm({ amount, toAddress, selectedNetworks });
+                }
+            };
+
+            const isConfirmEnabled = amount && parseFloat(amount) > 0 && toAddress && selectedNetworks.length > 0;
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex flex-col h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[21px] w-full h-full">
+                            {/* Header */}
+                            <div className="flex items-center justify-between w-full">
+                                <div className="w-[24px]" />
+                                <p className="font-bold text-[20px] text-gray-900 dark:text-gray-100">Send</p>
+                                <div className="w-[24px]" />
+                            </div>
+
+                            {/* Balance */}
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Available Balance</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{balance - (parseFloat(amount) || 0)} USDC</p>
+                            </div>
+
+                            {/* Amount Input */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                                    <input
+                                        type="text"
+                                        value={amount}
+                                        onChange={handleAmountChange}
+                                        placeholder="0.00"
+                                        className="w-full bg-transparent text-2xl font-bold text-gray-900 dark:text-gray-100 outline-none"
+                                    />
+                                    {amount && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">≈ ${amountUSD} USD</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* To Address Input */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
+                                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                                    <input
+                                        type="text"
+                                        value={toAddress}
+                                        onChange={handleToAddressChange}
+                                        placeholder="vitalik.eth or 0x..."
+                                        className="w-full bg-transparent text-base text-gray-900 dark:text-gray-100 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Network Selection */}
+                            {showNetworks && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-2"
+                                >
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Networks</label>
+                                    <div className="space-y-2">
+                                        <button
+                                            onClick={() => toggleNetwork('Arbitrum')}
+                                            className={`w-full p-4 rounded-2xl flex items-center gap-3 transition-colors ${
+                                                selectedNetworks.includes('Arbitrum')
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                                            }`}
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center">
+                                                <span className="text-white text-sm font-bold">A</span>
+                                            </div>
+                                            <span className="font-semibold">Arbitrum</span>
+                                        </button>
+                                        <button
+                                            onClick={() => toggleNetwork('Optimism')}
+                                            className={`w-full p-4 rounded-2xl flex items-center gap-3 transition-colors ${
+                                                selectedNetworks.includes('Optimism')
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                                            }`}
+                                        >
+                                            <div className="w-8 h-8 rounded-full overflow-hidden">
+                                                <img 
+                                                    src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=040" 
+                                                    alt="Optimism"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <span className="font-semibold">Optimism</span>
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Fees */}
+                            {amount && parseFloat(amount) > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 space-y-2"
+                                >
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600 dark:text-gray-400">Provider Fee (10%)</span>
+                                        <span className="text-gray-900 dark:text-gray-100 font-semibold">{providerFee} USDC</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600 dark:text-gray-400">Gas Fee</span>
+                                        <span className="text-gray-900 dark:text-gray-100 font-semibold">{gasFee} USDC</span>
+                                    </div>
+                                    <div className="border-t border-gray-300 dark:border-gray-700 pt-2 flex justify-between">
+                                        <span className="text-gray-900 dark:text-gray-100 font-bold">Total Fees</span>
+                                        <span className="text-gray-900 dark:text-gray-100 font-bold">{totalFees} USDC</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 text-right">≈ ${feesUSD} USD</p>
+                                </motion.div>
+                            )}
+
+                            {/* Confirm Button */}
+                            <div className="mt-auto">
+                                <motion.button
+                                    whileHover={isConfirmEnabled ? { scale: 1.02 } : {}}
+                                    whileTap={isConfirmEnabled ? { scale: 0.98 } : {}}
+                                    onClick={handleConfirmClick}
+                                    disabled={!isConfirmEnabled}
+                                    className={`w-full h-[52px] rounded-full shadow-lg flex items-center justify-center transition-all ${
+                                        isConfirmEnabled
+                                            ? 'bg-[#007FFF] shadow-[#007FFF]/30 cursor-pointer'
+                                            : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-50'
+                                    }`}
+                                >
+                                    <p className="font-semibold text-[16px] text-white">
+                                        Confirm
+                                    </p>
+                                </motion.button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Sign Preview Screen
+        function SignPreviewScreen({ amount, toAddress, selectedNetworks, onSign, onBack }) {
+            const providerFee = (parseFloat(amount) * 0.1).toFixed(2);
+            const gasFee = '0.2343434';
+            const totalFees = (parseFloat(providerFee) + parseFloat(gasFee)).toFixed(7);
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex flex-col h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[21px] w-full h-full">
+                            {/* Header */}
+                            <div className="flex items-center justify-between w-full">
+                                <button 
+                                    onClick={onBack}
+                                    className="w-[24px] h-[24px] rounded-full bg-gray-200/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-gray-300/60 dark:hover:bg-gray-600/60 transition-colors"
+                                >
+                                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24">
+                                        <path d="M15 18L9 12L15 6" stroke="currentColor" className="stroke-gray-900 dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </button>
+                                <p className="font-bold text-[20px] text-gray-900 dark:text-gray-100">Review Transaction</p>
+                                <div className="w-[24px]" />
+                            </div>
+
+                            {/* Amount Display */}
+                            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-6 text-center text-white">
+                                <p className="text-sm opacity-80">You're sending</p>
+                                <p className="text-4xl font-bold mt-2">{amount} USDC</p>
+                            </div>
+
+                            {/* Transaction Details */}
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 space-y-3">
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">From</span>
+                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">you.eth</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">To</span>
+                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{toAddress}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Network</span>
+                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedNetworks.join(', ')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Est. Time</span>
+                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">2-3 minutes</span>
+                                </div>
+                            </div>
+
+                            {/* Fees Breakdown */}
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600 dark:text-gray-400">Provider Fee</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-semibold">{providerFee} USDC</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600 dark:text-gray-400">Gas Fee</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-semibold">{gasFee} USDC</span>
+                                </div>
+                                <div className="border-t border-gray-300 dark:border-gray-700 pt-2 flex justify-between">
+                                    <span className="text-gray-900 dark:text-gray-100 font-bold">Total Fees</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-bold">{totalFees} USDC</span>
+                                </div>
+                            </div>
+
+                            {/* Sign Button */}
+                            <div className="mt-auto">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={onSign}
+                                    className="w-full h-[52px] bg-[#007FFF] rounded-full shadow-lg shadow-[#007FFF]/30 cursor-pointer flex items-center justify-center"
+                                >
+                                    <p className="font-semibold text-[16px] text-white">
+                                        Sign Once to Send
+                                    </p>
+                                </motion.button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Send Progress Screen
+        function SendProgressScreen({ amount, toAddress, onComplete }) {
+            const [currentStep, setCurrentStep] = useState(0);
+            
+            const steps = [
+                { label: 'Initiating transfer', status: 'complete' },
+                { label: 'Bridging to Optimism', status: currentStep >= 1 ? 'complete' : currentStep === 0 ? 'current' : 'pending' },
+                { label: 'Confirming on network', status: currentStep >= 2 ? 'complete' : currentStep === 1 ? 'current' : 'pending' },
+                { label: 'Transfer complete', status: currentStep >= 3 ? 'complete' : currentStep === 2 ? 'current' : 'pending' }
+            ];
+
+            useEffect(() => {
+                const timers = [
+                    setTimeout(() => setCurrentStep(1), 1500),
+                    setTimeout(() => setCurrentStep(2), 3000),
+                    setTimeout(() => setCurrentStep(3), 4500),
+                    setTimeout(() => onComplete(), 6000)
+                ];
+
+                return () => timers.forEach(timer => clearTimeout(timer));
+            }, [onComplete]);
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex flex-col h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[32px] w-full h-full items-center justify-center">
+                            {/* Animated Circle */}
+                            <motion.div 
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                className="w-24 h-24 rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-blue-500"
+                            />
+
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Processing Transfer</p>
+                                <p className="text-gray-600 dark:text-gray-400 mt-2">{amount} USDC to {toAddress}</p>
+                            </div>
+
+                            {/* Progress Steps */}
+                            <div className="w-full space-y-4">
+                                {steps.map((step, index) => {
+                                    const stepStatus = step.status === 'complete' ? 'complete' : 
+                                                     step.status === 'current' ? 'current' : 'pending';
+                                    
+                                    return (
+                                        <div key={index} className="flex items-center gap-3">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                                stepStatus === 'complete' ? 'bg-green-500' :
+                                                stepStatus === 'current' ? 'bg-blue-500' :
+                                                'bg-gray-300 dark:bg-gray-700'
+                                            }`}>
+                                                {stepStatus === 'complete' && (
+                                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <p className={`text-sm ${
+                                                stepStatus === 'complete' ? 'text-gray-900 dark:text-gray-100 font-semibold' :
+                                                stepStatus === 'current' ? 'text-gray-700 dark:text-gray-300 font-medium' :
+                                                'text-gray-500 dark:text-gray-500'
+                                            }`}>
+                                                {step.label}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Success Screen
+        function SuccessScreen({ amount, onBackToSend, onViewHistory }) {
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex flex-col h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[32px] w-full h-full items-center justify-center">
+                            {/* Success Icon */}
+                            <motion.div 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", duration: 0.6 }}
+                                className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center"
+                            >
+                                <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </motion.div>
+
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Transfer Successful!</p>
+                                <p className="text-gray-600 dark:text-gray-400 mt-2">{amount} USDC has been sent</p>
+                            </div>
+
+                            {/* Transaction Summary */}
+                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-2xl p-6 space-y-3">
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center">
+                                        <span className="text-white text-sm font-bold">A</span>
+                                    </div>
+                                    <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                                        <img 
+                                            src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=040" 
+                                            alt="Optimism"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                                    Bridged from Arbitrum to Optimism
+                                </p>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="w-full mt-auto">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={onViewHistory || onBackToSend}
+                                    className="w-full h-[52px] bg-[#007FFF] rounded-full shadow-lg shadow-[#007FFF]/30 cursor-pointer flex items-center justify-center"
+                                >
+                                    <p className="font-semibold text-[16px] text-white">
+                                        Check history
+                                    </p>
+                                </motion.button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // History Screen
+        function HistoryScreen({ transactions, onBack }) {
+            const formatDate = (date) => {
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                if (diffHours < 24) return `${diffHours}h ago`;
+                if (diffDays < 7) return `${diffDays}d ago`;
+                
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            };
+
+            const TransactionCard = ({ transaction }) => {
+                const statusColors = {
+                    success: 'text-green-500 dark:text-green-400',
+                    pending: 'text-yellow-500 dark:text-yellow-400',
+                    failed: 'text-red-500 dark:text-red-400'
+                };
+
+                const statusBgColors = {
+                    success: 'bg-green-100 dark:bg-green-900/30',
+                    pending: 'bg-yellow-100 dark:bg-yellow-900/30',
+                    failed: 'bg-red-100 dark:bg-red-900/30'
+                };
+
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 space-y-3"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <span className="text-white text-sm font-bold">$</span>
+                                </div>
+                                <div>
+                                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                                        {transaction.amount} {transaction.asset}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {formatDate(transaction.timestamp)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full ${statusBgColors[transaction.status]}`}>
+                                <p className={`text-xs font-bold capitalize ${statusColors[transaction.status]}`}>
+                                    {transaction.status}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-5 h-5 rounded-full bg-black dark:bg-gray-600 flex items-center justify-center">
+                                    <span className="text-white text-[10px] font-medium">A</span>
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    {transaction.fromNetwork}
+                                </span>
+                            </div>
+                            
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-5 h-5 rounded-full overflow-hidden">
+                                    <img 
+                                        src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=040" 
+                                        alt={transaction.toNetwork}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    {transaction.toNetwork}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">To</span>
+                            <span className="font-bold text-gray-900 dark:text-gray-100">{transaction.toAddress}</span>
+                        </div>
+                    </motion.div>
+                );
+            };
+
+            return (
+                <div className="bg-[#9e9e98] dark:bg-gray-800 border border-black dark:border-gray-700 border-solid overflow-clip relative rounded-[60px] w-full h-full">
+                    <StatusBarComponent />
+                    
+                    <div className="absolute bg-white dark:bg-gray-900 flex h-[784.405px] items-start left-1/2 px-[32px] py-[40px] rounded-[40px] top-[66.6px] -translate-x-1/2 w-[393px]">
+                        <div className="flex flex-col gap-[21px] w-full h-full">
+                            <div className="flex items-center justify-between w-full">
+                                <button 
+                                    onClick={onBack}
+                                    className="w-[24px] h-[24px] rounded-full bg-gray-200/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-gray-300/60 dark:hover:bg-gray-600/60 transition-colors"
+                                >
+                                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24">
+                                        <path d="M15 18L9 12L15 6" stroke="currentColor" className="stroke-gray-900 dark:stroke-gray-300" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                                    </svg>
+                                </button>
+                                <p className="font-bold text-[20px] text-gray-900 dark:text-gray-100">Transaction History</p>
+                                <div className="w-[24px]" />
+                            </div>
+
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Transactions</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{transactions.length}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto w-full space-y-3 pr-1">
+                                {transactions.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
+                                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <p className="font-bold text-gray-900 dark:text-gray-100">No transactions yet</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Your transaction history will appear here</p>
+                                    </div>
+                                ) : (
+                                    transactions.map((transaction) => (
+                                        <TransactionCard key={transaction.id} transaction={transaction} />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App
+        function App() {
+            const [currentScreen, setCurrentScreen] = useState('landing');
+            const [transactionData, setTransactionData] = useState(null);
+            const [transactionHistory, setTransactionHistory] = useState([]);
+
+            const handleStartSend = () => setCurrentScreen('form');
+            
+            const handleConfirm = (data) => {
+                setTransactionData(data);
+                setCurrentScreen('preview');
+            };
+
+            const handleSign = () => setCurrentScreen('progress');
+            
+            const handleBack = () => setCurrentScreen('form');
+
+            const handleComplete = () => {
+                if (transactionData) {
+                    const newTransaction = {
+                        id: `tx-${Date.now()}`,
+                        asset: 'USDC',
+                        amount: transactionData.amount,
+                        fromNetwork: 'Arbitrum',
+                        toNetwork: 'Optimism',
+                        toAddress: transactionData.toAddress,
+                        timestamp: new Date(),
+                        status: 'success'
+                    };
+                    setTransactionHistory(prev => [newTransaction, ...prev]);
+                }
+                setCurrentScreen('success');
+            };
+
+            const handleBackToSend = () => {
+                setCurrentScreen('form');
+                setTransactionData(null);
+            };
+
+            const handleViewHistory = () => setCurrentScreen('history');
+            
+            const handleBackFromHistory = () => setCurrentScreen('form');
+
+            return (
+                <>
+                    {currentScreen === 'landing' && <LandingScreen onStartSend={handleStartSend} />}
+                    {currentScreen === 'form' && <SendFormScreen onConfirm={handleConfirm} />}
+                    {currentScreen === 'preview' && transactionData && (
+                        <SignPreviewScreen
+                            amount={transactionData.amount}
+                            toAddress={transactionData.toAddress}
+                            selectedNetworks={transactionData.selectedNetworks}
+                            onSign={handleSign}
+                            onBack={handleBack}
+                        />
+                    )}
+                    {currentScreen === 'progress' && transactionData && (
+                        <SendProgressScreen
+                            amount={transactionData.amount}
+                            toAddress={transactionData.toAddress}
+                            onComplete={handleComplete}
+                        />
+                    )}
+                    {currentScreen === 'success' && transactionData && (
+                        <SuccessScreen
+                            amount={transactionData.amount}
+                            onBackToSend={handleBackToSend}
+                            onViewHistory={handleViewHistory}
+                        />
+                    )}
+                    {currentScreen === 'history' && (
+                        <HistoryScreen
+                            transactions={transactionHistory}
+                            onBack={handleBackFromHistory}
+                        />
+                    )}
+                </>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
