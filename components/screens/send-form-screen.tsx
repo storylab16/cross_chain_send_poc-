@@ -147,20 +147,40 @@ export function SendFormScreen({ onConfirm }: SendFormScreenProps) {
                           type="text"
                           value={toAddress}
                           onChange={(e) => {
-                            if (e.target.value) {
+                            const val = e.target.value
+                            if (val === "" || val.length < toAddress.length) {
+                              setToAddress("")
+                              setSelectedNetworks([])
+                              setShowNetworkSelection(true)
+                            } else if (val && !toAddress) {
                               setToAddress("bob.eth@op")
                               if (!selectedNetworks.includes("Optimism")) {
                                 setSelectedNetworks((prev) => [...prev, "Optimism"])
                               }
                               setShowNetworkSelection(false)
-                            } else {
-                              setToAddress("")
                             }
                           }}
                           onFocus={() => !toAddress && setShowNetworkSelection(true)}
                           placeholder="Wallet address or ENS name"
                           className="font-normal text-[14px] text-white bg-transparent outline-none border-none flex-1 placeholder:text-[#4a5568]"
                         />
+                        {/* Clear button when address is entered */}
+                        {toAddress && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setToAddress("")
+                              setSelectedNetworks([])
+                              setShowNetworkSelection(true)
+                            }}
+                            className="shrink-0 size-[24px] rounded-full bg-[#1c2333] flex items-center justify-center hover:bg-[#252d40] transition-colors"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M9 3L3 9" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" />
+                              <path d="M3 3L9 9" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
 
                       {showNetworkSelection && !toAddress && (
