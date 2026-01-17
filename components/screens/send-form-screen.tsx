@@ -2,39 +2,10 @@
 
 import { useState } from "react"
 import { StatusBar } from "./status-bar"
+import { ArbitrumIcon, OptimismIcon } from "./network-icons"
 
 interface SendFormScreenProps {
   onConfirm: (data: { amount: string; toAddress: string; selectedNetworks: string[] }) => void
-}
-
-// Arbitrum icon
-function ArbitrumIcon({ size = 20 }: { size?: number }) {
-  return (
-    <div
-      className={`relative shrink-0 rounded-full overflow-hidden bg-[#2D374B] flex items-center justify-center`}
-      style={{ width: size, height: size }}
-    >
-      <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="#28A0F0" />
-        <path d="M12 22l10-5v-4l-10 5-10-5v4l10 5z" fill="#96BEDC" />
-      </svg>
-    </div>
-  )
-}
-
-// Optimism icon
-function OptimismIcon({ size = 20 }: { size?: number }) {
-  return (
-    <div
-      className={`relative shrink-0 rounded-full overflow-hidden bg-[#FF0420] flex items-center justify-center`}
-      style={{ width: size, height: size }}
-    >
-      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="white">
-        <circle cx="8" cy="12" r="3" />
-        <circle cx="16" cy="12" r="3" />
-      </svg>
-    </div>
-  )
 }
 
 // USDC Icon
@@ -139,7 +110,7 @@ export function SendFormScreen({ onConfirm }: SendFormScreenProps) {
                     <div className="content-stretch flex flex-col items-end justify-center px-[20px] py-[14px] relative size-full">
                       <div className="content-stretch flex h-[24px] items-center justify-between relative shrink-0 w-full">
                         <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
-                          <ArbitrumIcon />
+                          <ArbitrumIcon size={20} />
                           <p className="font-medium text-[14px] text-[#9ca3af]">Arbitrum</p>
                         </div>
                         <p className="font-medium text-[14px] text-[#9ca3af]">
@@ -202,9 +173,7 @@ export function SendFormScreen({ onConfirm }: SendFormScreenProps) {
                               className="flex-1 p-3 rounded-[12px] border border-[#1e2a3d] opacity-50 cursor-not-allowed bg-[#1c2333]"
                             >
                               <div className="flex items-center gap-2">
-                                <div className="size-[28px] rounded-full bg-[#4a5568] flex items-center justify-center text-white text-sm font-medium">
-                                  A
-                                </div>
+                                <ArbitrumIcon size={28} />
                                 <span className="font-medium text-[14px] text-[#9ca3af]">Arbitrum</span>
                               </div>
                             </button>
@@ -222,9 +191,7 @@ export function SendFormScreen({ onConfirm }: SendFormScreenProps) {
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <div className="size-[28px] rounded-full bg-[#4a5568] flex items-center justify-center text-white text-sm font-medium">
-                                  O
-                                </div>
+                                <OptimismIcon size={28} />
                                 <span className="font-medium text-[14px] text-[#9ca3af]">Optimism</span>
                               </div>
                             </button>

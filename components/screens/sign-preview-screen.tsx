@@ -1,6 +1,7 @@
 "use client"
 
 import { StatusBar } from "./status-bar"
+import { ArbitrumIcon, OptimismIcon } from "./network-icons"
 
 interface SignPreviewScreenProps {
   amount: string
@@ -8,30 +9,6 @@ interface SignPreviewScreenProps {
   selectedNetworks: string[]
   onSign: () => void
   onBack: () => void
-}
-
-// Arbitrum icon
-function ArbitrumIcon() {
-  return (
-    <div className="relative shrink-0 size-[20px] rounded-full overflow-hidden bg-[#2D374B] flex items-center justify-center">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="#28A0F0" />
-        <path d="M12 22l10-5v-4l-10 5-10-5v4l10 5z" fill="#96BEDC" />
-      </svg>
-    </div>
-  )
-}
-
-// Optimism icon
-function OptimismIcon() {
-  return (
-    <div className="relative shrink-0 size-[16px] rounded-full overflow-hidden bg-[#FF0420] flex items-center justify-center">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
-        <circle cx="8" cy="12" r="3" />
-        <circle cx="16" cy="12" r="3" />
-      </svg>
-    </div>
-  )
 }
 
 export function SignPreviewScreen({ amount, toAddress, onSign, onBack }: SignPreviewScreenProps) {
@@ -131,7 +108,7 @@ export function SignPreviewScreen({ amount, toAddress, onSign, onBack }: SignPre
                             To
                           </p>
                           <div className="bg-[#1c2333] content-stretch flex gap-[4px] items-center px-[9px] py-[4px] relative rounded-[100px] shrink-0">
-                            <OptimismIcon />
+                            <OptimismIcon size={16} />
                             <div className="flex flex-col font-medium justify-center leading-[0] relative shrink-0 text-[#9ca3af] text-[12px] text-nowrap text-right tracking-[0.0048px]">
                               <p className="leading-[1.3]">Optimism</p>
                             </div>
@@ -196,7 +173,7 @@ export function SignPreviewScreen({ amount, toAddress, onSign, onBack }: SignPre
                       Network
                     </p>
                     <div className="flex items-center gap-2">
-                      <ArbitrumIcon />
+                      <ArbitrumIcon size={20} />
                       <p className="font-bold leading-[22px] relative shrink-0 text-white text-[14px]">Arbitrum</p>
                     </div>
                   </div>

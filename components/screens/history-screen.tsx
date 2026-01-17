@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import { StatusBar } from "./status-bar"
+import { ArbitrumIcon, OptimismIcon } from "./network-icons"
 
 export interface Transaction {
   id: string
@@ -74,9 +75,7 @@ function TransactionCard({ transaction }: { transaction: Transaction }) {
       {/* Route */}
       <div className="flex items-center gap-2 bg-[#1c2333] rounded-lg p-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full bg-[#2D374B] flex items-center justify-center">
-            <span className="text-white text-[10px] font-medium">A</span>
-          </div>
+          <ArbitrumIcon size={20} />
           <span className="text-xs font-bold text-[#9ca3af]">{transaction.fromNetwork}</span>
         </div>
 
@@ -85,12 +84,7 @@ function TransactionCard({ transaction }: { transaction: Transaction }) {
         </svg>
 
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full overflow-hidden bg-[#FF0420] flex items-center justify-center">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-              <circle cx="8" cy="12" r="3" />
-              <circle cx="16" cy="12" r="3" />
-            </svg>
-          </div>
+          <OptimismIcon size={20} />
           <span className="text-xs font-bold text-[#9ca3af]">{transaction.toNetwork}</span>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import { StatusBar } from "./status-bar"
+import { ArbitrumIcon, OptimismIcon } from "./network-icons"
 
 interface SendProgressScreenProps {
   amount: string
@@ -65,16 +66,12 @@ export function SendProgressScreen({ amount, onComplete }: SendProgressScreenPro
 
                   {/* Network Flow Visualization */}
                   <div className="content-center flex flex-wrap gap-[1px_11px] items-center relative">
-                    {/* Arbitrum Icon */}
                     <motion.div
-                      className="bg-[#2D374B] content-stretch flex items-center justify-center relative rounded-[120px] size-[24px]"
+                      className="flex items-center justify-center"
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
                     >
-                      <svg viewBox="0 0 24 24" fill="none" className="size-4">
-                        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" fill="#28A0F0" />
-                        <path d="M12 22l10-5v-4l-10 5-10-5v4l10 5z" fill="#96BEDC" />
-                      </svg>
+                      <ArbitrumIcon size={24} />
                     </motion.div>
 
                     {/* Arrow */}
@@ -153,16 +150,12 @@ export function SendProgressScreen({ amount, onComplete }: SendProgressScreenPro
                       </div>
                     </motion.div>
 
-                    {/* Optimism Icon */}
                     <motion.div
-                      className="bg-[#FF0420] content-stretch flex items-center justify-center relative rounded-[120px] size-[24px]"
+                      className="flex items-center justify-center"
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 1 }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                        <circle cx="8" cy="12" r="3" />
-                        <circle cx="16" cy="12" r="3" />
-                      </svg>
+                      <OptimismIcon size={24} />
                     </motion.div>
                   </div>
                 </div>
